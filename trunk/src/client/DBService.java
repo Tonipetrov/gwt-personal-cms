@@ -30,6 +30,10 @@ public interface DBService extends RemoteService {
         }
     }
 
-    // Services to be exposed.
-    public String getMenuItems();
+    // Menu bar APIs
+    ArrayList getMenuItems(String type);
+
+    // Content getters
+    String getFrontPageContent();
+
 }
