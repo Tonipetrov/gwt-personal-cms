@@ -4,6 +4,11 @@ import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 import client.DBService;
 
 import java.util.ArrayList;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+import server.common.DBQueryConsts;
+import server.common.ServerAPIConsts;
 
 /**
  * Created by IntelliJ IDEA.
@@ -21,9 +26,53 @@ public class DBServiceImpl extends RemoteServiceServlet implements DBService {
         dbManager = DBManager.getInstance();
     }
 
-    // Services to be exposed.
-    public String getMenuItems() {
-        StringBuffer query = new StringBuffer("SELECT * FROM emp_data");
-        return dbManager.select(query.toString());
+    // Menu bar APIs
+    public ArrayList getMenuItems(String type) {
+        ArrayList menuList = new ArrayList();
+        ResultSet rs = null;
+
+        if(ServerAPIConsts.ACTIVE_MENUS.equals(type)) {
+            rs = dbManager.select(DBQueryConsts.activeMenuItemsQuery);
+        } else if(ServerAPIConsts.INACTIVE_MENUS.equals(type)) {
+            rs = dbManager.select(DBQueryConsts.inactiveMenuItemsQuery);
+        } else {
+            rs = dbManager.select(DBQueryConsts.allMenuItemsQuery);
+        }
+                
+        try {
+            while(rs.next()) {
+                menuList.add(rs.getString(DBQueryConsts.menuBarNameName).trim());
+            }
+        } catch (SQLException e) {
+            // TODO Exception handling
+            return null;
+        }
+
+        dbManager.closeResultSet();
+
+        return menuList;
     }
+
+    // Content getters
+    public String getFrontPageContent() {
+        String content = null;
+        ResultSet rs = null;
+
+        rs = dbManager.select(DBQueryConsts.getFrontPageContent);
+
+        try {
+            if(rs.next()) {
+                content = rs.getString(DBQueryConsts.frontPageContentColumnName).trim();
+                System.out.println(content);
+            }
+        } catch (SQLException e) {
+            // TODO Handle exception
+            return null;
+        }
+
+        dbManager.closeResultSet();
+
+        return content;
+    }
+
 }

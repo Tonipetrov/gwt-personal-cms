@@ -10,6 +10,10 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
  * To change this template use File | Settings | File Templates.
  */
 public interface DBServiceAsync {
-    // Services to be exposed.
-    void getMenuItems(AsyncCallback async);
+
+    // Menu bar APIs
+    void getMenuItems(String type, AsyncCallback async);
+
+    // Content getters
+    void getFrontPageContent(AsyncCallback async);
 }

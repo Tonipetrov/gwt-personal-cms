@@ -9,6 +9,7 @@ import java.util.Properties;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 /**
  * Created by IntelliJ IDEA.
@@ -32,9 +33,11 @@ public class DBManager {
     private Connection conn = null;
 
     private static DBManager dbManager = null;
+    private Statement stmt = null;
+    private ResultSet rs = null;
 
     public static DBManager getInstance() {
-        if(dbManager == null) {
+        if (dbManager == null) {
             dbManager = new DBManager();
             dbManager.initializeDbManager();
         }
@@ -46,7 +49,7 @@ public class DBManager {
         propsLoader = PropertiesLoader.getInstance();
         dbProps = propsLoader.loadPropertyFile(ServerConstants.DBProps_File);
 
-        if(dbProps == null) {
+        if (dbProps == null || dbProps.size() < 1) {
             // TODO Handle Error Situation
             System.exit(-1);
         }
@@ -59,7 +62,7 @@ public class DBManager {
 
         // DB Driver initialization start.
         try {
-           Class.forName("com.mysql.jdbc.Driver").newInstance();
+            Class.forName("com.mysql.jdbc.Driver").newInstance();
         } catch (Exception ex) {
             System.out.println("Cannot find driver!");
             System.exit(-1);
@@ -80,7 +83,7 @@ public class DBManager {
 
     }
 
-    public String select(String query) {
+    public ResultSet select(String query) {
         StringBuffer list = new StringBuffer();
 
         list.append(dbProps.getProperty("db.serverAddr"));
@@ -88,9 +91,30 @@ public class DBManager {
         list.append(dbProps.getProperty("db.name"));
         list.append(dbProps.getProperty("db.user"));
         list.append(dbProps.getProperty("db.pass"));
+        System.out.println(list);
 
-        //list.append("Hello DB");
-        return list.toString();
+        try {
+            stmt = conn.createStatement();
+        } catch (SQLException e) {
+            // TODO handle error
+            System.out.println("Cannot create statement!");
+            closeResultSet();
+            stmt = null;
+            return null;
+        }
+
+        try {
+            rs = stmt.executeQuery(query);
+        } catch (SQLException e) {
+            // TODO handle error
+            System.out.println("Cannot execute : " + query);
+            closeResultSet();
+            stmt = null;
+            rs = null;
+            return null;
+        }
+
+        return rs;
     }
 
     public ResultSet selectPaginated(String query, int startIndex, int endIndex) {
@@ -98,7 +122,33 @@ public class DBManager {
     }
 
     public void update(String query) {
-        
+
     }
 
+    public boolean closeResultSet() {
+        boolean errFlag = false;
+
+        if (rs != null) {
+            try {
+                rs.close();
+            } catch (SQLException sqlEx) { // ignore }
+                errFlag = true;
+                rs = null;
+            }
+        }
+
+        if (stmt != null) {
+            try {
+                stmt.close();
+            } catch (SQLException sqlEx) { // ignore }
+                rs = null;
+                stmt = null;
+                errFlag = true;
+            }
+        }
+
+        return !errFlag;
+    }
+    
 }
+
